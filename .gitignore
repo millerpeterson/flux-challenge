@@ -1,3 +1,5 @@
 node_modules/
 ignore/
 npm-debug.log
+.DS_Store
+flux-challenge-reframe/.nrepl-port
