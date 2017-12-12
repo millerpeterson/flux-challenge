@@ -10,7 +10,7 @@
   [sith-with-homeworlds]
   [:ul.css-slots
    (map (fn [sith]
-           [:li.css-slot {:key (:name sith)} ;; TODO: this key should include the list position
+           [:li.css-slot {:key (:name sith)}
             [:h3 (:name sith)]
             [:h6 (str "Homeworld: " (:homeworld sith))]])
          sith-with-homeworlds)])
