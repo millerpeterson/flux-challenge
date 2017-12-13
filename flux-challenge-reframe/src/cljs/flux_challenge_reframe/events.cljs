@@ -10,4 +10,7 @@
 (rf/reg-event-db
  :scroll
  (fn [db [_ direction]]
-   (.log js/console "scroll event" direction)))
+   (case direction
+     :up (update-in db [:view :top-slot-rank] #(+ % 2))
+     :down (update-in db [:view :top-slot-rank] #(- % 2))
+     db)))
