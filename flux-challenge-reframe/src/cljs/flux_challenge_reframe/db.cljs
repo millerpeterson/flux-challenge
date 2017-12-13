@@ -14,8 +14,8 @@
                :homeworld "Jupiter"
                :master 30
                :apprentice 932}}
-   :view {:scroll-ref-sith-id 30
-          :scroll-top-pos 0}})
+   :rank-ref-sith-id 30 ; The sith who is considered rank "0".
+   :view {:top-slot-rank 0}})
 
 (defn ref-sith
   [db]
@@ -53,7 +53,7 @@
 
 (defn padded-visible-masters
   [db num-slots]
-  (let [highest-visible-pos (max 0 (- (get-in db [:view :scroll-top-pos])))]
+  (let [highest-visible-pos (max 0 (- (get-in db [:view :top-slot-rank])))]
     (take (min highest-visible-pos num-slots)
           (reverse (padded-with-unknowns (known-masters db (ref-sith db))
                                          highest-visible-pos)))))
@@ -66,8 +66,8 @@
   (defn visible-sith
     [db num-slots]
     (let [ref-sith (get-in db [:sith (get-in db [:view :scroll-ref-sith-id])])
-          num-mstrs-of-ref (max 0 (- (:scroll-top-pos db)))
-          scroll-bottom-pos (+ (:scroll-top-pos db) num-slots)
+          num-mstrs-of-ref (max 0 (- (:top-slot-rank db)))
+          scroll-bottom-pos (+ (:top-slot-rank db) num-slots)
           num-apprs-of-ref (max 0 (- scroll-bottom-pos 1))
           padded-mstrs (padded-with-unknowns
                         (take num-mstrs-of-ref
