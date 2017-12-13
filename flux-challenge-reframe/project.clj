@@ -19,7 +19,7 @@
    {:dependencies [[binaryage/devtools "0.9.4"]
                    [day8.re-frame/trace "0.1.7"]
                    [figwheel-sidecar "0.5.13"]
-                   [re-frisk "0.5.0"]
+                   [re-frisk "0.5.3"]
                    [com.cemerick/piggieback "0.2.2"]]
 
     :plugins      [[lein-figwheel "0.5.13"]]}}
@@ -34,7 +34,8 @@
                     :output-dir           "resources/public/js/compiled/out"
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
-                    :preloads             [devtools.preload]
+                    :preloads             [devtools.preload
+                                           re-frisk.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}
                     }}
 
