@@ -1,7 +1,16 @@
 (ns flux-challenge-reframe.subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as rf]))
 
-(re-frame/reg-sub
- ::name
+(defn sith
+  [db id]
+  (get-in db [:sith id]))
+
+(rf/reg-sub
+ :visible-sith
  (fn [db]
-   (:name db)))
+   (mapv #(sith db %) (get-in db [:view]))))
+
+(rf/reg-sub
+ :obi-wan-location
+ (fn [db]
+   (get-in db [:obi-wan :location])))

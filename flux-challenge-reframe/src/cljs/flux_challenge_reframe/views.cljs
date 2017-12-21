@@ -9,11 +9,13 @@
 (defn sith-list
   [sith-with-homeworlds]
   [:ul.css-slots
-   (map (fn [sith]
-           [:li.css-slot {:key (:name sith)}
-            [:h3 (:name sith)]
-            [:h6 (str "Homeworld: " (:homeworld sith))]])
-         sith-with-homeworlds)])
+   (map-indexed (fn [i sith]
+                  [:li.css-slot {:key (get sith :name i)}
+                   (when-let [name (:name sith)]
+                     [:h3 name])
+                   (when-let [home (:homeworld sith)]
+                     [:h6 (str "Homeworld: " home)])])
+                sith-with-homeworlds)])
 
 (defn sith-list-scroll-controls
   []
@@ -29,15 +31,13 @@
    [sith-list sith]
    [sith-list-scroll-controls]])
 
-(def test-sith
-  [{:name "Billy Coolguy" :homeworld "Earth"}
-   {:name "Willy Niceman" :homeworld "Mercury"}])
-
 (defn main-panel []
-  [:div.app-container
-   [:div.css-root
-    [obiwan-location "Tatooine"]
-    [sith-list-with-controls test-sith]]])
+  (let [visible-sith @(rf/subscribe [:visible-sith])
+        obi-wan-loc @(rf/subscribe [:obi-wan-location])]
+    [:div.app-container
+     [:div.css-root
+      [obiwan-location obi-wan-loc]
+      [sith-list-with-controls visible-sith]]]))
 
 (comment
   (.log js/console "Whut?")
