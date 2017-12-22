@@ -7,18 +7,27 @@
  (fn  [_ _]
    db/default-db))
 
+(defn scrolled-by-steps
+  [num-steps step-fn view]
+  (last (take (+ num-steps 1) (iterate step-fn view))))
+
+(defn scrolled-step-up
+  [view]
+  (pop (conj view nil)))
+
+(defn scrolled-step-down
+  [view]
+  (into #queue [nil] (take 3 view)))
+
 (defn view-scrolled
-  [view direction scroll-step]
-  (case direction
-    :down (last (take (+ scroll-step 1)
-                      (iterate (comp pop #(conj % nil)) view)))
-    :up (last (take (+ scroll-step 1)
-                    (iterate #(into #queue [nil] %) (take 3 view))))
-    ))
+  [view direction num-steps]
+  (scrolled-by-steps num-steps
+                     (case direction
+                       ::down scrolled-step-down
+                       ::up scrolled-step-up)
+                     view))
 
 (rf/reg-event-db
- :scroll
+ ::scroll
  (fn [db [_ direction]]
-   (update-in db [:view]
-              (fn [v]
-                (view-scrolled v direction 1)))))
+   (update-in db [:view] #(view-scrolled % direction 1))))

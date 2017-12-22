@@ -1,5 +1,6 @@
 (ns flux-challenge-reframe.views
   (:require [re-frame.core :as rf]
+            [flux-challenge-reframe.events :as ev]
             [flux-challenge-reframe.subs :as subs]))
 
 (defn obiwan-location
@@ -21,9 +22,9 @@
   []
   [:div.css-scroll-buttons
    [:button.css-button-up
-    {:on-click (fn [_] (rf/dispatch [:scroll :up]))}]
+    {:on-click (fn [_] (rf/dispatch [::ev/scroll ::ev/up]))}]
    [:button.css-button-down
-    {:on-click (fn [_] (rf/dispatch [:scroll :down]))}]])
+    {:on-click (fn [_] (rf/dispatch [::ev/scroll ::ev/down]))}]])
 
 (defn sith-list-with-controls
   [sith]
