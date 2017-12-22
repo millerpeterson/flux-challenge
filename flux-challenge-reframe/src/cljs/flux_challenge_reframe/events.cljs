@@ -7,10 +7,18 @@
  (fn  [_ _]
    db/default-db))
 
+(defn view-scrolled
+  [view direction scroll-step]
+  (case direction
+    :down (last (take (+ scroll-step 1)
+                      (iterate (comp pop #(conj % nil)) view)))
+    :up (last (take (+ scroll-step 1)
+                    (iterate #(into #queue [nil] %) (take 3 view))))
+    ))
+
 (rf/reg-event-db
  :scroll
  (fn [db [_ direction]]
-   (case direction
-     :up (update-in db [:view :top-slot-rank] #(+ % 2))
-     :down (update-in db [:view :top-slot-rank] #(- % 2))
-     db)))
+   (update-in db [:view]
+              (fn [v]
+                (view-scrolled v direction 1)))))

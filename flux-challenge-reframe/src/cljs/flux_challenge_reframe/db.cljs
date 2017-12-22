@@ -14,5 +14,5 @@
                :homeworld "Jupiter"
                :master 30
                :apprentice 932}}
-   :view [65 30 nil nil]
+   :view #queue [65 30 nil nil]
    })
