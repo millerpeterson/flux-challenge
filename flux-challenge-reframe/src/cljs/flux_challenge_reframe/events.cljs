@@ -13,11 +13,11 @@
 
 (defn scrolled-step-up
   [view]
-  (pop (conj view nil)))
+  (into [nil] (take 3 view)))
 
 (defn scrolled-step-down
   [view]
-  (into #queue [nil] (take 3 view)))
+  (conj (subvec view 1) nil))
 
 (defn view-scrolled
   [view direction num-steps]
@@ -27,7 +27,8 @@
                        ::up scrolled-step-up)
                      view))
 
-(rf/reg-event-db
+(rf/reg-event-fx
  ::scroll
- (fn [db [_ direction]]
-   (update-in db [:view] #(view-scrolled % direction 1))))
+ (fn [cofx [_ direction]]
+   {:db (update-in (get cofx :db) [:view]
+                   #(view-scrolled % direction 1))}))
