@@ -14,5 +14,52 @@
                :homeworld "Jupiter"
                :master 30
                :apprentice 932}}
-   :view [65 30 nil nil]
-   })
+   :view [nil 65 30 nil nil]})
+
+(def num-view-slots 4)
+
+(defn view-slots
+  "Return a vector representing the view slots."
+  [db]
+  (get db :view))
+
+(defn sith-by-id
+  "Retrieve a sith by its id."
+  [db id]
+  (get-in db [:sith id]))
+
+(defn master-view-pos
+  "The index of a sith's master in the view slots, or nil if the master is
+   not present."
+  [db sith-id]
+  (let [sith (sith-by-id db sith-id)]
+    (first (keep-indexed #(when (= %2 (get sith :master)) %1)
+                         (view-slots db)))))
+
+(defn apprentice-view-pos
+  "The index of a sith's apprentice in the view slots, or nil if the
+   apprentice is not present."
+  [db sith-id]
+  (let [sith (sith-by-id db sith-id)]
+    (first (keep-indexed #(when (= %2 (get sith :apprentice)) %1)
+                         (view-slots db)))))
+
+(defn next-missing-master-id
+  "Returns the id of the master of the sith in the view slots that has an
+   open slot above them, or nil if there are no empty slots above the
+   highest sith."
+  [db]
+  (first (keep (fn [[m a]]
+                 (when (and (nil? m) (some? a))
+                   (get (sith-by-id db a) :master)))
+               (partition 2 1 (view-slots db)))))
+
+(defn next-missing-apprentice-id
+  "Returns the id of the apprentice of the lowest sith in the view slots
+   that has an open slot below them, or nil if there are no empty slots
+   below the lowest sith."
+  [db]
+  (first (keep (fn [[m a]]
+                 (when (and (some? m) (nil? a))
+                   (get (sith-by-id db m) :apprentice)))
+               (partition 2 1 (view-slots db)))))
