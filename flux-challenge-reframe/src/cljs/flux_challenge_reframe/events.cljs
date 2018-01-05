@@ -30,5 +30,8 @@
 (rf/reg-event-fx
  ::scroll
  (fn [cofx [_ direction]]
-   {:db (update-in (get cofx :db) [:view]
-                   #(view-scrolled % direction 1))}))
+   (do
+     (println (db/sith-by-id (get cofx :db)
+                             (db/missing-sith-id (get cofx :db))))
+     {:db (update-in (get cofx :db) [:view-slots]
+                     #(view-scrolled % direction 1))})))

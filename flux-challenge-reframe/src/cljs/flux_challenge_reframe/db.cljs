@@ -14,14 +14,15 @@
                :homeworld "Jupiter"
                :master 30
                :apprentice 932}}
-   :view [nil 65 30 nil nil]})
+   :view-slots [65 30 nil nil]
+   :sith-fetches {}})
 
 (def num-view-slots 4)
 
 (defn view-slots
   "Return a vector representing the view slots."
   [db]
-  (get db :view))
+  (get db :view-slots))
 
 (defn sith-by-id
   "Retrieve a sith by its id."
@@ -44,22 +45,32 @@
     (first (keep-indexed #(when (= %2 (get sith :apprentice)) %1)
                          (view-slots db)))))
 
-(defn next-missing-master-id
+(defn missing-master-id
   "Returns the id of the master of the sith in the view slots that has an
    open slot above them, or nil if there are no empty slots above the
    highest sith."
   [db]
+  (println "master" (partition 2 1 (view-slots db)))
   (first (keep (fn [[m a]]
                  (when (and (nil? m) (some? a))
                    (get (sith-by-id db a) :master)))
                (partition 2 1 (view-slots db)))))
 
-(defn next-missing-apprentice-id
+(defn missing-apprentice-id
   "Returns the id of the apprentice of the lowest sith in the view slots
    that has an open slot below them, or nil if there are no empty slots
    below the lowest sith."
   [db]
+  (println "apprentice" (partition 2 1 (view-slots db)))
   (first (keep (fn [[m a]]
                  (when (and (some? m) (nil? a))
                    (get (sith-by-id db m) :apprentice)))
                (partition 2 1 (view-slots db)))))
+
+(defn missing-sith-id
+  "Returns the next missing master or apprentice, in that order of
+   preference. When the view slots are full, returns nil."
+  [db]
+  (first (filter some? ((juxt missing-master-id
+                              missing-apprentice-id)
+                        db))))

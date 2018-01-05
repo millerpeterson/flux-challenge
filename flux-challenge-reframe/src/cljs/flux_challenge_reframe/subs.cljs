@@ -1,15 +1,11 @@
 (ns flux-challenge-reframe.subs
-  (:require [re-frame.core :as rf]))
-
-(defn sith-by-id
-  [db id]
-  (get-in db [:sith id]))
+  (:require [re-frame.core :as rf]
+            [flux-challenge-reframe.db :as db]))
 
 (rf/reg-sub
  :visible-sith
  (fn [db]
-   (let [visible-ids (get db :view)]
-     (mapv (partial sith-by-id db) visible-ids))))
+   (mapv (partial db/sith-by-id db) (db/view-slots db))))
 
 (rf/reg-sub
  :obi-wan-location
