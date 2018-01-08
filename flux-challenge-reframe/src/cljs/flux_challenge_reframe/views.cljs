@@ -39,7 +39,3 @@
      [:div.css-root
       [obiwan-location obi-wan-loc]
       [sith-list-with-controls visible-sith]]]))
-
-(comment
-  (.log js/console "Whut?")
-  )
