@@ -33,8 +33,8 @@
    [sith-list-scroll-controls]])
 
 (defn main-panel []
-  (let [visible-sith @(rf/subscribe [:visible-sith])
-        obi-wan-loc @(rf/subscribe [:obi-wan-location])]
+  (let [visible-sith @(rf/subscribe [::subs/visible-sith])
+        obi-wan-loc @(rf/subscribe [::subs/obi-wan-location])]
     [:div.app-container
      [:div.css-root
       [obiwan-location obi-wan-loc]

@@ -16,7 +16,7 @@
 (defn scrolled-step-up
   "The view scrolled a step up."
   [view]
-  (into [nil] (take 3 view)))
+  (into [nil] (take (- db/num-view-slots 1) view)))
 
 (defn scrolled-step-down
   "The view scrolled a step down."
@@ -32,8 +32,27 @@
                        ::up scrolled-step-up)
                      view))
 
+(defn next-missing-sith-id
+  "The id of the next sith that should be retrieved. Either the master above the
+   topmost sith in the view slots, or the apprentice below the lowest sith in the
+   view slots. There needs to be a space for them to go in the view slots, and
+   the master is preferred over the apprentice. When slots are full, returns nil."
+  [db]
+  (first (keep (fn [[master-id apprentice-id]]
+                 (cond
+                   ;; Missing master above a visible apprentice.
+                   (and (nil? master-id) (some? apprentice-id))
+                   (get (get-in db [:sith  apprentice-id]) :master)
+                   ;; Missing apprentice below a visible master.
+                   (and (some? master-id) (nil? apprentice-id))
+                   (get (get-in db [:sith master-id]) :apprentice)
+                   ;; Slots full; no missing sith.
+                   :else nil))
+               (partition 2 1 (get db :view-slots)))))
+
 (rf/reg-event-fx
  ::scroll
  (fn [cofx [_ direction]]
+   (println (next-missing-sith-id (get cofx :db)))
    {:db (update-in (get cofx :db) [:view-slots]
                    #(view-scrolled % direction 1))}))
