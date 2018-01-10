@@ -1,7 +1,7 @@
 (ns flux-challenge-reframe.events
   (:require [re-frame.core :as rf]
             [flux-challenge-reframe.db :as db]
-            [devtools.defaults :as d]))
+            [ajax.core :as ajax]))
 
 (rf/reg-event-db
  ::initialize-db
@@ -38,14 +38,35 @@
    {:db (update-in (get cofx :db) [:view-slots]
                    #(view-scrolled % direction 1))}))
 
+(defonce request-in-flight (atom nil))
+
+(defn cancel-request-in-flight!
+  []
+  (let [req @request-in-flight]
+    (when (some? req)
+      (do (ajax/abort req)
+          (reset! request-in-flight nil)))))
+
+(defn do-fetch-sith-request!
+  [id]
+  (ajax/ajax-request
+   {:uri (str "http://localhost:3000/dark-jedis/" id)
+    :method :get
+    :response-format (ajax/json-response-format {:keywords? true})
+    :handler (fn [ok res]
+               (.log js/console ok res)
+               (reset! request-in-flight nil))}))
+
+(rf/reg-fx
+ ::issue-sith-request
+ (fn [id]
+   (cancel-request-in-flight!)
+   (reset! request-in-flight (do-fetch-sith-request! id))
+   (.log js/console @request-in-flight)))
+
 (rf/reg-event-fx
  ::request-sith-fetch
  (fn [cofx [_ sith-id]]
-   ;; If this request is already in flight, nothing needs to happen.
-   ;; If there is a request in flight, and its ID is visible, nothing needs to
-   ;; happen.
-   ;; If there is a request in flight, and its not visible, cancel it, issue new
-   ;; request.
-   ;; If there is no request in flight, issue new request.
    (.log js/console "Fetch Sith" sith-id)
-   {:db (get cofx :db)}))
+   {:db (get cofx :db)
+    ::issue-sith-request sith-id}))

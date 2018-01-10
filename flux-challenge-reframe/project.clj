@@ -2,7 +2,8 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.7.0"]
-                 [re-frame "0.10.2"]]
+                 [re-frame "0.10.2"]
+                 [cljs-ajax "0.5.8"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
@@ -36,6 +37,7 @@
                     :source-map-timestamp true
                     :preloads             [devtools.preload
                                            re-frisk.preload]
+                    :optimizations :none
                     :external-config      {:devtools/config {:features-to-install :all}}
                     }}
 

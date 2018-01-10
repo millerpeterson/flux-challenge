@@ -1,5 +1,4 @@
 (ns flux-challenge-reframe.subs
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as rf]
             [flux-challenge-reframe.db :as db]
             [flux-challenge-reframe.events :as ev]))
