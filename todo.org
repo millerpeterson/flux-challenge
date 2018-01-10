@@ -1,0 +1,4 @@
+* Test out HTTP server / responses
+* Install HTTP effects; restart REPL
+* Use HTTP effects to request sith
+* Handle response from HTTP effects properly

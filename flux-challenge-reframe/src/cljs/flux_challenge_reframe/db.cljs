@@ -18,6 +18,6 @@
                :master 30
                :apprentice 932}}
    :view-slots [65 30 nil nil]
-   :sith-fetches {}})
+   })
 
 (def num-view-slots 4)
