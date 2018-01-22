@@ -32,11 +32,40 @@
                        ::up scrolled-step-up)
                      view))
 
+(defn missing-masters-filled
+  "The view with any master id's not present filled in based on the hierarchy
+   information in sith."
+  [view sith]
+  (conj (mapv (fn [[master-id apprentice-id]]
+                (if (and (nil? master-id) (some? apprentice-id))
+                  (-> (get sith apprentice-id)
+                      (get :master))
+                  master-id))
+              (partition 2 1 view))
+        (last view)))
+
+(defn missing-apprentices-filled
+  "The view with any apprentice id's not present filled based on the
+   hierarchy information in sith"
+  [view sith]
+  (into [(first view)]
+        (map (fn [[master-id apprentice-id]]
+               (if (and (some? master-id) (nil? apprentice-id))
+                 (-> (get sith master-id)
+                     (get :apprentice))
+                 apprentice-id))
+             (partition 2 1 view))))
+
 (rf/reg-event-fx
  ::scroll
  (fn [cofx [_ direction]]
-   {:db (update-in (get cofx :db) [:view-slots]
-                   #(view-scrolled % direction 1))}))
+   (let [db (get cofx :db)
+         sith (get db :sith)]
+     {:db (update-in db [:view-slots]
+                     (fn [view]
+                       (-> (view-scrolled view direction 1)
+                           (missing-apprentices-filled sith)
+                           (missing-masters-filled sith))))})))
 
 (defonce request-in-flight (atom nil))
 
