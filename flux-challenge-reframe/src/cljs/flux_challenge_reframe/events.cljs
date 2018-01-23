@@ -24,17 +24,18 @@
   (conj (subvec view 1) nil))
 
 (defn view-scrolled
-  "The view scrolled in a direction (up or down) by a set number of steps."
-  [view direction num-steps]
-  (scrolled-by-steps num-steps
-                     (case direction
-                       ::down scrolled-step-down
-                       ::up scrolled-step-up)
-                     view))
+  "The db's view scrolled in a direction (up or down) by a set number of steps."
+  [db direction num-steps]
+  (update-in db [:view-slots]
+             (fn [view]
+               (scrolled-by-steps num-steps
+                                  (case direction
+                                    ::down scrolled-step-down
+                                    ::up scrolled-step-up)
+                                  view))))
 
 (defn missing-masters-filled
-  "The view with any master id's not present filled in based on the hierarchy
-   information in sith."
+  "The view with missing master id's filled in based on the sith hierarchy."
   [view sith]
   (conj (mapv (fn [[master-id apprentice-id]]
                 (if (and (nil? master-id) (some? apprentice-id))
@@ -45,8 +46,7 @@
         (last view)))
 
 (defn missing-apprentices-filled
-  "The view with any apprentice id's not present filled based on the
-   hierarchy information in sith"
+  "The view with missing apprentice id's filled in based on the sith hierarchy."
   [view sith]
   (into [(first view)]
         (map (fn [[master-id apprentice-id]]
@@ -56,16 +56,33 @@
                  apprentice-id))
              (partition 2 1 view))))
 
+(defn missing-slots-filled
+  "The db with the highest missing master and apprentice ids filled in based
+   on the sith known hierarchy."
+  [db]
+  (let [sith (get db :sith)]
+    (update-in db [:view-slots]
+               (fn [view]
+                 (-> view
+                     (missing-apprentices-filled sith)
+                     (missing-masters-filled sith))))))
+
+(defn non-slotted-sith-removed
+  "The db stripped of knowledge of sith who are not in the view slots."
+  [db]
+  (update-in db [:sith]
+             (fn [sith]
+               (select-keys sith
+                            (filter (partial db/slotted-sith? db)
+                                    (keys sith))))))
+
 (rf/reg-event-fx
  ::scroll
  (fn [cofx [_ direction]]
-   (let [db (get cofx :db)
-         sith (get db :sith)]
-     {:db (update-in db [:view-slots]
-                     (fn [view]
-                       (-> (view-scrolled view direction 1)
-                           (missing-apprentices-filled sith)
-                           (missing-masters-filled sith))))})))
+   {:db (-> (get cofx :db)
+            (view-scrolled direction 1)
+            non-slotted-sith-removed
+            missing-slots-filled)}))
 
 (defonce request-in-flight (atom nil))
 

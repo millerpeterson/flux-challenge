@@ -17,7 +17,7 @@
                :homeworld "Jupiter"
                :master 30
                :apprentice 932}}
-   :view-slots [65 30 743 932]
+   :view-slots [nil 30 743 932]
    })
 
 (def num-view-slots 4)
@@ -28,7 +28,7 @@
 
 (defn slotted-sith?
   [db id]
-  (contains? (get db :view-slots) id))
+  (some #(= % id) (get db :view-slots)))
 
 (defn make-unknown-sith
   [id]
