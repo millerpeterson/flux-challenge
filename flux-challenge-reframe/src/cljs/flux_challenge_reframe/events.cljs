@@ -1,11 +1,12 @@
 (ns flux-challenge-reframe.events
   (:require [re-frame.core :as rf]
             [flux-challenge-reframe.db :as db]
-            [ajax.core :as ajax]))
+            [ajax.core :as ajax]
+            [reagent.core :as r]))
 
 (rf/reg-event-db
  ::initialize-db
- (fn  [_ _]
+ (fn [_ _]
    db/default-db))
 
 (defn scrolled-by-steps
@@ -51,8 +52,7 @@
   (into [(first view)]
         (map (fn [[master-id apprentice-id]]
                (if (and (some? master-id) (nil? apprentice-id))
-                 (-> (get sith master-id)
-                     (get :apprentice))
+                 (get-in sith [master-id :apprentice])
                  apprentice-id))
              (partition 2 1 view))))
 
@@ -67,6 +67,14 @@
                      (missing-apprentices-filled sith)
                      (missing-masters-filled sith))))))
 
+;; Fill in any slots that are empty but whose id we can infer from an adjacent
+;; master or apprentice.
+(def fill-missing-slots
+  (rf/->interceptor
+   :id ::fill-missing-slots
+   :after (fn [ctx]
+            (update-in ctx [:effects :db] missing-slots-filled))))
+
 (defn non-slotted-sith-removed
   "The db stripped of knowledge of sith who are not in the view slots."
   [db]
@@ -76,43 +84,94 @@
                             (filter (partial db/slotted-sith? db)
                                     (keys sith))))))
 
+;; Remove any sith not in view slots from our known sith db.
+(def remove-non-slotted-sith
+  (rf/->interceptor
+   :id ::remove-non-slotted-sith
+   :after (fn [ctx]
+            (update-in ctx [:effects :db] non-slotted-sith-removed))))
+
+(def scroll-step 2)
+
 (rf/reg-event-fx
  ::scroll
+ [remove-non-slotted-sith fill-missing-slots]
  (fn [cofx [_ direction]]
    {:db (-> (get cofx :db)
-            (view-scrolled direction 1)
-            non-slotted-sith-removed
-            missing-slots-filled)}))
+            (view-scrolled direction scroll-step))}))
 
 (defonce request-in-flight (atom nil))
 
 (defn cancel-request-in-flight!
   []
-  (let [req @request-in-flight]
-    (when (some? req)
-      (do (ajax/abort req)
-          (reset! request-in-flight nil)))))
+  (when-let [req @request-in-flight]
+    (do (ajax/abort req)
+        (reset! request-in-flight nil))))
 
-(defn do-fetch-sith-request!
-  [id]
-  (ajax/ajax-request
-   {:uri (str "http://localhost:3000/dark-jedis/" id)
-    :method :get
-    :response-format (ajax/json-response-format {:keywords? true})
-    :handler (fn [ok res]
-               (.log js/console ok res)
-               (reset! request-in-flight nil))}))
+(defn sith-from-fetch-response
+  [resp]
+  {:id (get resp :id)
+   :name (get resp :name)
+   :homeworld (get-in resp [:homeworld :name])
+   :master (get-in resp [:master :id])
+   :apprentice (get-in resp [:apprentice :id])})
 
 (rf/reg-fx
- ::issue-sith-request
- (fn [id]
-   (cancel-request-in-flight!)
-   (reset! request-in-flight (do-fetch-sith-request! id))
-   (.log js/console @request-in-flight)))
+ ::sith-inquiry
+ (fn [sith-id]
+   (ajax/ajax-request
+    {:uri (str "http://localhost:3000/dark-jedis/" sith-id)
+     :method :get
+     :response-format (ajax/json-response-format {:keywords? true})
+     :handler (fn [[ok resp]]
+                (.log js/console ok resp)
+                (reset! request-in-flight nil)
+                (when ok
+                  (js/console.log "OK!" (sith-from-fetch-response resp))
+                  (rf/dispatch [::sith-details-learned (sith-from-fetch-response resp)])
+                ;;   (rf/dispatch [::inquiry-failed sith-id]))
+                ))})))
+
+(rf/reg-event-db
+ ::sith-details-learned
+ [fill-missing-slots]
+ (fn [db [_ learned-sith]]
+   (-> db
+       (assoc-in [:sith (get learned-sith :id)] learned-sith)
+       (assoc-in [:inquiries :in-progress] nil)
+       ;; (update-in [:inquiries :to-do] remove #{(get :id learned-sith)})
+       )))
 
 (rf/reg-event-fx
- ::request-sith-fetch
+ ::sith-under-investigation
  (fn [cofx [_ sith-id]]
-   (.log js/console "Fetch Sith" sith-id)
-   {:db (get cofx :db)
-    ::issue-sith-request sith-id}))
+   (.log js/console "I'm investigating:" sith-id)
+   {:db (update-in (get cofx :db) [:inquiries :to-do] conj sith-id)
+    ::sith-inquiry sith-id}
+   ))
+
+(rf/reg-event-db
+ ::sith-no-longer-under-investigation
+ (fn [db [_ sith-id]]
+   (.log js/console "I'm done with:" sith-id)
+   ;; (update-in db [:inquiries :to-do] remove #{sith-id})
+   ))
+
+(rf/reg-event-fx
+ ::continue-inquiries
+ (fn [cofx _]
+   (js/console.log "I'll continue my inquiries!")
+   (let [db (get cofx :db)
+         in-progress (get-in db [:inquiries :in-progress])
+         to-do (get-in db [:inquiries :to-do])]
+     (if (or (not (db/slotted-sith? db in-progress))
+             (and (nil? in-progress) (not (empty? to-do))))
+       (let [next-target (first to-do)]
+         {:db (assoc-in db [:inquiries :in-progress] next-target)
+          ::sith-inquiry next-target})
+       {:db db}))))
+
+(rf/reg-event-db
+ ::inquiry-failed
+ (fn [db _]
+   (assoc-in db [:inquiries :in-progress] nil)))

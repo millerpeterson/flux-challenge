@@ -23,7 +23,7 @@
  ::sith-by-id
  (fn [app-db [_ id]]
    (when (not (db/known-sith? @app-db id))
-     (rf/dispatch [::ev/request-sith-fetch id]))
+     (rf/dispatch [::ev/sith-under-investigation id]))
    (reaction
     (let [sith @(rf/subscribe [::sith])]
       (or (get sith id)
