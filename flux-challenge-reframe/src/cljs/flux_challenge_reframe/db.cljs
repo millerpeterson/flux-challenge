@@ -19,8 +19,7 @@
    ;;             :apprentice 932}}
    :sith {}
    :view-slots [nil 3616 nil nil]
-   :inquiries {:in-progress nil
-               :to-do #{}}
+   :inquiry-in-progress nil
    })
 
 (def num-view-slots 4)
