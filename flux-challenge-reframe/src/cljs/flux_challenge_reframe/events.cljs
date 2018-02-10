@@ -242,6 +242,7 @@
  (fn [cofx _]
    {::close-obi-wan-location-channel nil}))
 
+;; We've learned a new location for Obi-Wan.
 (rf/reg-event-db
  ::obi-wan-location-changed
  []
