@@ -1,8 +1,11 @@
 (ns flux-challenge-reframe.events
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [re-frame.core :as rf]
             [flux-challenge-reframe.db :as db]
             [ajax.core :as ajax]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [cljs.core.async :as a :refer [<! >!]]
+            [haslett.client :as ws]))
 
 (rf/reg-event-db
  ::initialize-db
@@ -10,7 +13,7 @@
    db/default-db))
 
 (defn scrolled-by-steps
-  "The view scrolled by a step function a number of times."
+  "The view-slots scrolled by a step function a number of times."
   [num-steps step-fn view]
   (last (take (+ num-steps 1) (iterate step-fn view))))
 
@@ -201,3 +204,47 @@
  [continue-inquiries]
  (fn [db [_ completed-id]]
    (assoc db :inquiry-in-progress nil)))
+
+(defonce ws-connection (atom nil))
+
+;; Open a websocket connection to monitor for receiving updates on Obi-Wan's location.
+(rf/reg-fx
+ ::open-obi-wan-location-channel
+ (fn [channel-address]
+   (js/console.log channel-address)
+   (go
+     (reset! ws-connection (<! (ws/connect channel-address)))
+     (loop []
+       (let [location-json (<! (get @ws-connection :source))
+             location (js->clj (js/JSON.parse location-json))]
+         (js/console.log location)
+         (rf/dispatch [::obi-wan-location-changed {:id (get location "id")
+                                                   :name (get location "name")}])
+         (recur))))))
+
+;; Close the websocket connection that was monitoring Obi-Wan's location.
+(rf/reg-fx
+ ::close-obi-wan-location-channel
+ (fn [_]
+   (ws/close @ws-connection)))
+
+;; Begin monitoring Obi-Wan's location.
+(rf/reg-event-fx
+ ::begin-obiwan-monitoring
+ []
+ (fn [cofx _]
+   {::open-obi-wan-location-channel "ws://localhost:4000"}))
+
+;; Stop monitoring Obi-Wan's location.
+(rf/reg-event-fx
+ ::stop-obiwan-monitoring
+ []
+ (fn [cofx _]
+   {::close-obi-wan-location-channel nil}))
+
+(rf/reg-event-db
+ ::obi-wan-location-changed
+ []
+ (fn [db [_ new-location]]
+   []
+   (assoc db :obi-wan-location new-location)))
