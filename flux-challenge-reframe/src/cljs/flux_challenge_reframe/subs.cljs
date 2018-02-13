@@ -12,7 +12,7 @@
 (rf/reg-sub
  ::obi-wan-location
  (fn [db]
-   (get-in db [:obi-wan-location :name])))
+   (get db :obi-wan-location)))
 
 (rf/reg-sub
  ::view-slots

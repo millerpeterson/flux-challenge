@@ -5,7 +5,6 @@
             [flux-challenge-reframe.views :as views]
             [flux-challenge-reframe.config :as config]))
 
-
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)

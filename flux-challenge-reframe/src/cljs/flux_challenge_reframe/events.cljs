@@ -167,7 +167,7 @@
   [resp]
   {:id (get resp :id)
    :name (get resp :name)
-   :homeworld (get-in resp [:homeworld :name])
+   :homeworld (get resp :homeworld)
    :master (get-in resp [:master :id])
    :apprentice (get-in resp [:apprentice :id])})
 
@@ -216,10 +216,9 @@
      (reset! ws-connection (<! (ws/connect channel-address)))
      (loop []
        (let [location-json (<! (get @ws-connection :source))
-             location (js->clj (js/JSON.parse location-json))]
+             location (js->clj (js/JSON.parse location-json) :keywordize-keys true)]
          (js/console.log location)
-         (rf/dispatch [::obi-wan-location-changed {:id (get location "id")
-                                                   :name (get location "name")}])
+         (rf/dispatch [::obi-wan-location-changed location])
          (recur))))))
 
 ;; Close the websocket connection that was monitoring Obi-Wan's location.

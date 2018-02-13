@@ -10,7 +10,7 @@
 (defn sith-list-slot
   [id]
   (let [sith @(rf/subscribe [::subs/sith-by-id id])
-        homeworld (get sith :homeworld)]
+        homeworld (get-in sith [:homeworld :name])]
     [:li.css-slot {:key id}
      [:h3 (get sith :name)]
      [:h6 (when (seq homeworld)
@@ -43,5 +43,5 @@
         view-slots @(rf/subscribe [::subs/view-slots])]
     [:div.app-container
      [:div.css-root
-      [obiwan-location obi-wan-loc]
+      [obiwan-location (get obi-wan-loc :name)]
       [sith-list-with-controls view-slots]]]))
