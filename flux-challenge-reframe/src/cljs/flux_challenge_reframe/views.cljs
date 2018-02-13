@@ -10,8 +10,10 @@
 (defn sith-list-slot
   [id]
   (let [sith @(rf/subscribe [::subs/sith-by-id id])
-        homeworld (get-in sith [:homeworld :name])]
-    [:li.css-slot {:key id}
+        homeworld (get-in sith [:homeworld :name])
+        obi-wan-on-homeworld? @(rf/subscribe [::subs/obi-wan-on-siths-homeworld? id])]
+    [:li.css-slot {:key id
+                   :class [(when obi-wan-on-homeworld? "alert")]}
      [:h3 (get sith :name)]
      [:h6 (when (seq homeworld)
             (str "Homeworld: " homeworld))]]))

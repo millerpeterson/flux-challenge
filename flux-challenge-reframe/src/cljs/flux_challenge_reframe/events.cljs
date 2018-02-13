@@ -217,7 +217,6 @@
      (loop []
        (let [location-json (<! (get @ws-connection :source))
              location (js->clj (js/JSON.parse location-json) :keywordize-keys true)]
-         (js/console.log location)
          (rf/dispatch [::obi-wan-location-changed location])
          (recur))))))
 

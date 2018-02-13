@@ -28,3 +28,12 @@
     (let [sith @(rf/subscribe [::sith])]
       (or (get sith id)
           (db/make-unknown-sith id))))))
+
+(rf/reg-sub
+ ::obi-wan-on-siths-homeworld?
+ (fn [[_ sith-id]]
+   [(rf/subscribe [::obi-wan-location])
+    (rf/subscribe [::sith-by-id sith-id])])
+ (fn [[obi-wan-loc sith]]
+   (= (get obi-wan-loc :id)
+      (get-in sith [:homeworld :id]))))
