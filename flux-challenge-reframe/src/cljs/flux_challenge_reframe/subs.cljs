@@ -14,6 +14,11 @@
  (fn [db]
    (get db :obi-wan-location)))
 
+(rf/reg-sub
+ :view-slots
+ (fn [db]
+   (get db :view-slots)))
+
 (rf/reg-sub-raw
  ::sith-by-id
  (fn [app-db [_ id]]

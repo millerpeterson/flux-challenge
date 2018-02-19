@@ -1,4 +1,4 @@
-(ns flux-challenge-reframe.slots
+(ns flux-challenge-reframe.domain.slots
   (:require [flux-challenge-reframe.db :as db]
             [flux-challenge-reframe.events :as ev]
             [re-frame.core :as rf]))
@@ -6,11 +6,6 @@
 ;; This namespace deals with the views slots - the vertically stacked boxes in the UI where
 ;; the sith are displayed hierarchically from top to bottom (a master appears above their
 ;; apprentice).
-
-(rf/reg-sub
- :view-slots
- (fn [db]
-   (get db :view-slots)))
 
 (defn visible-sith?
   "Is a given sith visible in the slots?"
@@ -38,7 +33,8 @@
   (conj (subvec view 1) nil))
 
 (defn scrolled
-  "The db's view scrolled in a direction (up or down) by a set number of steps."
+  "The db's view scrolled in a direction (up or down) by a set number
+   of steps."
   [db direction num-steps]
   (update-in db [:view-slots]
              (fn [view]
@@ -86,20 +82,11 @@
                      (missing-apprentices-filled sith)
                      (missing-masters-filled sith))))))
 
-;; Fill in any slots that are empty but whose id we can infer from an
-;; adjacent master or apprentice.
-(def fill-missing-slots
-  (rf/->interceptor
-   :id ::fill-missing-slots
-   :after (fn [ctx]
-            (update-in ctx [:effects :db] missing-slots-filled))))
+;; This namespace deals with the views slots - the vertically stacked boxes in the UI where
+;; the sith are displayed hierarchically from top to bottom (a master appears above their
+;; apprentice).
 
-;; Scroll the view slots up or down.
-(rf/reg-event-fx
- :scroll
- [ev/remove-non-slotted-sith
-  fill-missing-slots
-  ev/cancel-non-slotted-inquiries]
- (fn [cofx [_ direction]]
-   {:db (-> (get cofx :db)
-            (scrolled direction scroll-step))}))
+(defn visible-sith?
+  "Is a given sith visible in the slots?"
+  [db id]
+  (some #(= % id) (get db :view-slots)))

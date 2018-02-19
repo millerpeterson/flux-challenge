@@ -2,7 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [re-frame.core :as rf]
             [flux-challenge-reframe.db :as db]
-            [flux-challenge-reframe.slots :as slots]
+            [flux-challenge-reframe.domain.slots :as slots]
             [ajax.core :as ajax]
             [reagent.core :as r]
             [cljs.core.async :as a :refer [<! >!]]
@@ -12,6 +12,14 @@
  ::initialize-db
  (fn [_ _]
    db/default-db))
+
+;; Fill in any slots that are empty but whose id we can infer from an
+;; adjacent master or apprentice.
+(def fill-missing-slots
+  (rf/->interceptor
+   :id ::fill-missing-slots
+   :after (fn [ctx]
+            (update-in ctx [:effects :db] slots/missing-slots-filled))))
 
 (defn non-slotted-sith-removed
   "The db stripped of knowledge of sith who are not in the view slots."
@@ -125,6 +133,18 @@
  [continue-inquiries]
  (fn [db [_ completed-id]]
    (assoc db :inquiry-in-progress nil)))
+
+(def scroll-step 2)
+
+;; Scroll the view slots up or down.
+(rf/reg-event-fx
+ :scroll
+ [remove-non-slotted-sith
+  fill-missing-slots
+  cancel-non-slotted-inquiries]
+ (fn [cofx [_ direction]]
+   {:db (-> (get cofx :db)
+            (slots/scrolled direction scroll-step))}))
 
 (defonce ws-connection (atom nil))
 
