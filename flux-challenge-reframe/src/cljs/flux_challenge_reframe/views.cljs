@@ -30,9 +30,9 @@
   []
   [:div.css-scroll-buttons
    [:button.css-button-up
-    {:on-click (fn [_] (rf/dispatch [::ev/scroll ::ev/up]))}]
+    {:on-click (fn [_] (rf/dispatch [:scroll :up]))}]
    [:button.css-button-down
-    {:on-click (fn [_] (rf/dispatch [::ev/scroll ::ev/down]))}]])
+    {:on-click (fn [_] (rf/dispatch [:scroll :down]))}]])
 
 (defn sith-list-with-controls
   [view-slots]
@@ -42,7 +42,7 @@
 
 (defn main-panel []
   (let [obi-wan-loc @(rf/subscribe [::subs/obi-wan-location])
-        view-slots @(rf/subscribe [::subs/view-slots])]
+        view-slots @(rf/subscribe [:view-slots])]
     [:div.app-container
      [:div.css-root
       [obiwan-location (get obi-wan-loc :name)]

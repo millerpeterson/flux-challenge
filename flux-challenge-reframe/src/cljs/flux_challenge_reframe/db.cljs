@@ -14,10 +14,6 @@
   [db id]
   (contains? (get db :sith) id))
 
-(defn slotted-sith?
-  [db id]
-  (some #(= % id) (get db :view-slots)))
-
 (defn make-unknown-sith
   [id]
   {:id id
