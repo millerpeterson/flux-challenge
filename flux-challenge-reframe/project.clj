@@ -6,7 +6,8 @@
                  [cljs-ajax "0.5.8"]
                  [haslett "0.1.1"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"]]
+  :plugins [[lein-cljsbuild "1.1.5"]
+            [lein-doo "0.1.8"]]
 
   :min-lein-version "2.5.3"
 
@@ -41,6 +42,16 @@
                     :optimizations :none
                     :external-config      {:devtools/config {:features-to-install :all}}
                     }}
+
+    {:id           "test"
+     :source-paths ["src/cljs" "test"]
+     :compiler     {:output-to "resources/public/js/tests/testable.js"
+                    :output-dir "resources/public/js/tests"
+                    :optimizations :none
+                    :main flux-challenge-reframe.test-runner
+                    :target :nodejs
+                    }}
+
 
     {:id           "min"
      :source-paths ["src/cljs"]

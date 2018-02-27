@@ -1,6 +1,5 @@
 (ns flux-challenge-reframe.domain.slots
   (:require [flux-challenge-reframe.db :as db]
-            [flux-challenge-reframe.events :as ev]
             [re-frame.core :as rf]))
 
 ;; This namespace deals with the views slots - the vertically stacked boxes in the UI where
